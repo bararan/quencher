@@ -14,6 +14,8 @@ navbar {
     position: fixed;
     background: inherit;
     z-index: 10;
+    border-bottom: 5px solid goldenrod;
+    box-shadow: 5px 5px 5px #252525;
 }
 
 navbar h2 {
@@ -71,9 +73,8 @@ input {
 }
 
 .form-control::placeholder {
-    border-bottom: 2px solid goldenrod;
-    color: goldenrod;
-    opacity: 0.4;
+    border-bottom: 5px solid goldenrod;
+    color: rgba(218,165,32,0.4);
 }
 
 .input-group-addon {
@@ -92,7 +93,7 @@ input {
 .thumbnail {
     width: 18%;
     height: auto;
-    background: none;
+    background: rgba(37,37,37,0.6);
     border: 4px solid goldenrod;
     border-radius: 4px;
     margin: 1%;
@@ -118,6 +119,10 @@ a, a:hover, a:visited, a:active {
     text-decoration: none;
 }
 
+a:hover, a:visited, a:active {
+    text-shadow: none;
+}
+
 .glyphicon {
     background: none;
     border: none;
@@ -140,7 +145,7 @@ a, a:hover, a:visited, a:active {
     border: none;
     color: #252525;
     opacity: 0.85;
-    box-shadow: 5px 5px 5px #252525;
+    box-shadow: 5px 5px 5px 5px #252525;
 }
 
 .hidden {

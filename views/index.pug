@@ -2,6 +2,10 @@ include ./partials/head.pug
 
 block content
     if results
+        navbar(
+            id="top-navbar"
+        )
+            h2.text-center= city
         div(id="search-results" class="container-fluid")
             each business in results
                 div(class="thumbnail")
@@ -10,8 +14,8 @@ block content
                     a(href=business.url target="_blank" class="text-center") #{business.name}
                     h6(class="text-center") #{business.rating}
                         span(class="glyphicon glyphicon-star")
-                    - var postLink = "/add/" + business.id
-                    button(class="btn submit add-remove" method="POST" formaction= postLink) I'm Going!
+                    - var postLink = "/addremove/" + business.id
+                    a(class="btn submit add-remove" href= postLink) I'm Going!
     else
         div(class="jumbotron")
             div(class="container-fluid")

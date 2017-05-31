@@ -45,7 +45,7 @@ dbClient.connect(url, function(err, db) {
                 {
                     consumerKey: process.env.TWITTER_KEY,
                     consumerSecret: process.env.TWITTER_SECRET,
-                    callbackURL: "/results"
+                    callbackURL: "/"
                 },
                 function(token, tokenSecret, profile, done) {
                     db.collection("quenchUsers").findOne(function(err, user) {
