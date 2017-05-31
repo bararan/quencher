@@ -1,0 +1,26 @@
+include ./partials/head.pug
+
+block content
+    if results
+        div(id="search-results" class="container-fluid")
+            each business in results
+                div(class="thumbnail")
+                    div(class="img-container")
+                        img(src=business.image_url)
+                    a(href=business.url target="_blank" class="text-center") #{business.name}
+                    h6(class="text-center") #{business.rating}
+                        span(class="glyphicon glyphicon-star")
+                    - var postLink = "/add/" + business.id
+                    button(class="btn submit add-remove" method="POST" formaction= postLink) I'm Going!
+    else
+        div(class="jumbotron")
+            div(class="container-fluid")
+                h1(class="text-center") WHERE WILL YOU BE TONIGHT?
+            div(id="search-form" class="container-fluid")
+                form(class="form" method="POST")
+                    div(class="input-group")
+                        input(type="text" class="form-control text-center" name="city" placeholder="Enter your city" required autofocus)
+                        //- input(type="submit" class="hidden" formaction="/search")
+                        span(class="input-group-addon hidden")
+                            button(type="submit" class="glyphicon glyphicon-search" formaction="/search")
+        

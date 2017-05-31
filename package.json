@@ -1,0 +1,32 @@
+{
+  "name": "quencher",
+  "version": "1.0.0",
+  "description": "Find local bars, see who's there",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bararan/quencher.git"
+  },
+  "author": "bararan",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bararan/quencher/issues"
+  },
+  "homepage": "https://github.com/bararan/quencher#readme",
+  "dependencies": {
+    "body-parser": "1.17.2",
+    "dotenv": "4.0.0",
+    "express": "4.15.3",
+    "express-session": "1.15.3",
+    "mongodb": "2.2.27",
+    "morgan": "1.8.2",
+    "passport": "0.3.2",
+    "passport-twitter": "1.0.4",
+    "path": "0.12.7",
+    "pug": "2.0.0-rc.1",
+    "yelp-fusion": "1.0.3"
+  }
+}
