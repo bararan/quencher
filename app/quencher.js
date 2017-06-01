@@ -20,13 +20,12 @@ module.exports = function(app,db, passport, yelpClient) {
             location: req.body.city,
             limit: 50
         };
-        req.session.userDataRecvd = req.user ? true : false;
         yelpClient.search(searchRequest)
             .then(function(response) {
                 req.session.city = req.body.city;
                 req.session.results = response.jsonBody.businesses.map(function(bus) {
                     let userGoing = false;
-                    if (req.session.userDataRecvd) {
+                    if (req.user) {
                         db.collection("quencherBusinesses").findOne(
                             {id: bus.id},
                             {_id: 0, going: 1},
@@ -83,30 +82,27 @@ module.exports = function(app,db, passport, yelpClient) {
     })
 
     app.get("/addme", function(req, res) {
-        if (!req.session.userDataRecvd) {
-            let sessionBusinesses = req.session.results.map(function(bus) {
-                return bus.id;
-            })
-            db.collection("quencherBusinesses").find(
-                {
-                    id: {$in: sessionBusinesses}
-                },
-                {
-                    _id: 0,
-                    id: 1,
-                    going: 1
-                }
-            ).toArray(function(err, businesses) {
-                if (err) return console.error(err);
-                businesses.forEach(function(business) {
-                    let sessionBusiness = req.session.results.find(function(bus) {
-                        return bus.id == business.id;
-                    })
-                    sessionBusiness.userGoing = business.going.indexOf(req.user.user_id) > -1;
+        let sessionBusinesses = req.session.results.map(function(bus) {
+            return bus.id;
+        })
+        db.collection("quencherBusinesses").find(
+            {
+                id: {$in: sessionBusinesses}
+            },
+            {
+                _id: 0,
+                id: 1,
+                going: 1
+            }
+        ).toArray(function(err, businesses) {
+            if (err) return console.error(err);
+            businesses.forEach(function(business) {
+                let sessionBusiness = req.session.results.find(function(bus) {
+                    return bus.id == business.id;
                 })
-            });
-            req.session.userDataRecvd = true;
-        }
+                sessionBusiness.userGoing = business.going.indexOf(req.user.user_id) > -1;
+            })
+        });
         db.collection("quencherBusinesses").findOneAndUpdate(
             {id: req.session.businessId},
             {
