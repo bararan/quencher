@@ -20,27 +20,31 @@ module.exports = function(app,db, passport, yelpClient) {
             location: req.body.city,
             limit: 50
         };
+        req.session.userDataRecvd = req.user ? true : false;
         yelpClient.search(searchRequest)
             .then(function(response) {
                 req.session.city = req.body.city;
                 req.session.results = response.jsonBody.businesses.map(function(bus) {
                     let userGoing = false;
-                    db.collection("quenchBusinesses").findOne(
-                        {id: bus.id},
-                        {_id: 0, going: 1},
-                        function(err, business) {
-                            if (err) return console.error(err);
-                            if (business) {
-                                userGoing = business.value.going.indexOf(req.user.user_id) > -1;
-                            }
-                        });
-                        return {name: bus.name,
-                                url: bus.url,
-                                image_url: bus.image_url,
-                                id: bus.id,
-                                rating: bus.rating,
-                                userGoing: userGoing
-                        }
+                    if (req.session.userDataRecvd) {
+                        db.collection("quencherBusinesses").findOne(
+                            {id: bus.id},
+                            {_id: 0, going: 1},
+                            function(err, business) {
+                                if (err) return console.error(err);
+                                if (business) {
+                                    userGoing = business.value.going.indexOf(req.user.user_id) > -1;
+                                }
+                            });
+                    }
+                    return {
+                        name: bus.name,
+                        url: bus.url,
+                        image_url: bus.image_url,
+                        id: bus.id,
+                        rating: bus.rating,
+                        userGoing: userGoing
+                    }
                 })
                 return res.redirect("/")
             })
@@ -58,6 +62,7 @@ module.exports = function(app,db, passport, yelpClient) {
     })
 
     app.post("/removeme", function(req, res) {
+        req.session.businessId = req.body.businessId;
         db.collection("quencherBusinesses").findOneAndUpdate(
             {id: req.session.businessId},
             {
@@ -78,6 +83,30 @@ module.exports = function(app,db, passport, yelpClient) {
     })
 
     app.get("/addme", function(req, res) {
+        if (!req.session.userDataRecvd) {
+            let sessionBusinesses = req.session.results.map(function(bus) {
+                return bus.id;
+            })
+            db.collection("quencherBusinesses").find(
+                {
+                    id: {$in: sessionBusinesses}
+                },
+                {
+                    _id: 0,
+                    id: 1,
+                    going: 1
+                }
+            ).toArray(function(err, businesses) {
+                if (err) return console.error(err);
+                businesses.forEach(function(business) {
+                    let sessionBusiness = req.session.results.find(function(bus) {
+                        return bus.id == business.id;
+                    })
+                    sessionBusiness.userGoing = business.going.indexOf(req.user.user_id) > -1;
+                })
+            });
+            req.session.userDataRecvd = true;
+        }
         db.collection("quencherBusinesses").findOneAndUpdate(
             {id: req.session.businessId},
             {
