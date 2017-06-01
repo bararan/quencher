@@ -8,14 +8,10 @@ module.exports = function(app,db, passport, yelpClient) {
         res.render("index", {city: city, results: results});
     })
 
-    // app.get("*", function(req, res) {
-    //     return res.redirect("/");
-    // })
-
     app.get("/auth/twitter", passport.authenticate("twitter"));
 
     app.get("/auth/twitter/callback",
-        passport.authenticate("twitter", { successRedirect: "/",
+        passport.authenticate("twitter", { successRedirect: "/addme",
                                             failureRedirect: "/" }));
 
     app.post("/search", function(req, res) {
@@ -26,32 +22,79 @@ module.exports = function(app,db, passport, yelpClient) {
         };
         yelpClient.search(searchRequest)
             .then(function(response) {
-                // console.log(JSON.stringify(response.jsonBody));
                 req.session.city = req.body.city;
                 req.session.results = response.jsonBody.businesses.map(function(bus) {
-                    return {name: bus.name,
-                            url: bus.url,
-                            image_url: bus.image_url,
-                            id: bus.id,
-                            rating: bus.rating
+                    let userGoing = false;
+                    db.collection("quenchBusinesses").findOne(
+                        {id: bus.id},
+                        {_id: 0, going: 1},
+                        function(err, business) {
+                            if (err) return console.error(err);
+                            if (business) {
+                                userGoing = business.value.going.indexOf(req.user.user_id) > -1;
+                            }
+                        });
+                        return {name: bus.name,
+                                url: bus.url,
+                                image_url: bus.image_url,
+                                id: bus.id,
+                                rating: bus.rating,
+                                userGoing: userGoing
                         }
                 })
-                // return res.render("index", {city: req.body.city,results: response.jsonBody.businesses});
                 return res.redirect("/")
             })
             .catch(function(err) {
-                console.log(err);
+                console.error(err);
             });
     })
 
-    app.get("/addremove/:businessId", function(req, res) {
-        console.log("TRYING")
+    app.post("/addme", function(req, res) {
+        req.session.businessId = req.body.businessId;
         if (!req.user) {
-            console.log("HOWDY")
             return res.redirect("/auth/twitter");
         }
-        console.log("USER HERE")
-        console.log(req.user)
-        res.redirect("/")
+        return res.redirect("/addme");
+    })
+
+    app.post("/removeme", function(req, res) {
+        db.collection("quencherBusinesses").findOneAndUpdate(
+            {id: req.session.businessId},
+            {
+                $pull: {going: req.user.user_id}
+            },
+            {
+                returnOriginal: false
+            },
+            function(err, response) {
+                if (err) return console.error(err);
+                let business = req.session.results.find(function(bus) {
+                    return bus.id == req.session.businessId;
+                })
+                business.userGoing = false;
+                return res.redirect("/");
+            }
+        )
+    })
+
+    app.get("/addme", function(req, res) {
+        db.collection("quencherBusinesses").findOneAndUpdate(
+            {id: req.session.businessId},
+            {
+                $addToSet: {going: req.user.user_id}
+            },
+            {
+                returnOriginal: false,
+                upsert: true
+            },
+            function(err, response) {
+                if (err) return console.error(err);
+                let business = req.session.results.find(function(bus) {
+                    return bus.id == req.session.businessId;
+                })
+                business.userGoing = true;
+                return res.redirect("/");
+            }
+        )
     })
 }

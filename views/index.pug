@@ -14,8 +14,14 @@ block content
                     a(href=business.url target="_blank" class="text-center") #{business.name}
                     h6(class="text-center") #{business.rating}
                         span(class="glyphicon glyphicon-star")
-                    - var postLink = "/addremove/" + business.id
-                    a(class="btn submit add-remove" href= postLink) I'm Going!
+                    unless business.userGoing
+                        form(id="attendance" method="POST")
+                            input(class="hidden" name="businessId" value=business.id)
+                            button(type="submit" class="btn submit add-remove" formaction= "/addme") I'm Going!
+                    else
+                        form(id="attendance" method="POST")
+                            input(class="hidden" name="businessId" value=business.id)
+                            button(type="submit" class="btn submit add-remove" formaction= "/removeme") I can't make it!
     else
         div(class="jumbotron")
             div(class="container-fluid")

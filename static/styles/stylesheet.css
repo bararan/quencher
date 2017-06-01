@@ -105,7 +105,8 @@ input {
 
 .img-container {
     width: 100%;
-    height: 180px;
+    height: 184px;
+    border-bottom: 2px solid goldenrod;
 }
 
 img {
@@ -123,6 +124,12 @@ a:hover, a:visited, a:active {
     text-shadow: none;
 }
 
+#attendance {
+    width: 100%;
+    height: 30px;
+    margin-bottom: -4px
+}
+
 .glyphicon {
     background: none;
     border: none;
@@ -132,12 +139,11 @@ a:hover, a:visited, a:active {
 .add-remove {
     position: relative;
     width: 100%;
-    height: 30px;
+    height: 100%;
     font-weight: bold;
     background: none;
     border-top: 4px solid goldenrod;
     border-radius: 4px;
-    margin-bottom: -4px
 }
 
 .add-remove:hover {
