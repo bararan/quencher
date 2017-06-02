@@ -10,7 +10,7 @@ const express = require("express")
     , yelp = require('yelp-fusion')
     , morgan = require("morgan")
     , session = require("express-session")
-    , MongoStore = require("connect-mongodb-session")(session)
+    // , MongoStore = require("connect-mongodb-session")(session)
     , bodyParser = require("body-parser")
     , quencher = require("./app/quencher"); 
 
@@ -26,21 +26,16 @@ dbClient.connect(url, function(err, db) {
             const yelpClient = yelp.client(response.jsonBody.access_token);
             let app = express();
             app.use(bodyParser.urlencoded({extended: true}));
-            var store = new MongoStore(
-                {
-                    url: url,
-                    collection: "quencherSessions"
-            });
-
-            store.on("error", function(err) {
-                console.log("DB ERROR!: " + err)
-            });
-
             app.use(session({
                 secret: "myDirtyLittleSecret",
                 resave: true,
                 saveUninitialized: false
-                , store: store
+                // , store: new MongoStore(
+                //     {
+                //         uri: url,
+                //         collection: "quencherSessions"
+                //     }
+                // )
             }));
             app.use(passport.initialize());
             app.use(passport.session());
