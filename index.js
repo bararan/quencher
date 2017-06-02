@@ -15,7 +15,6 @@ const express = require("express")
     , quencher = require("./app/quencher"); 
 
 const url = "mongodb://" + process.env.DBUSR + ":" + process.env.DBPW + "@" + process.env.DB_URI;
-// const sessionUrl = "mongodb://" + process.env.DBUSR + ":" + process.env.DBPW + "@" + process.env.SESSION_DB_URI;
 const dbClient = mongo.MongoClient;
 
 dbClient.connect(url, function(err, db) {
