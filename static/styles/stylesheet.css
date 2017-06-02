@@ -5,6 +5,7 @@ body {
     background-position: center bottom;
     background-attachment: fixed;
     color: goldenrod;
+    font-family: "Open Sans", sans-serif;
     text-shadow: 5px 5px 5px #252525;
 }
 
@@ -28,6 +29,10 @@ navbar h2 {
 h1 {
     color: goldenrod !important;
     font-family: 'Megrim', cursive;
+    font-weight: bold;
+}
+
+h5 {
     font-weight: bold;
 }
 
@@ -122,6 +127,12 @@ a, a:hover, a:visited, a:active {
 
 a:hover, a:visited, a:active {
     text-shadow: none;
+}
+
+a:hover {
+    background: rgba(218,165,32,0.85);
+    color: #252525;
+    opacity: 0.7;
 }
 
 #attendance {

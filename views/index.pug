@@ -12,8 +12,9 @@ block content
                     div(class="img-container")
                         img(src=business.image_url)
                     a(href=business.url target="_blank" class="text-center") #{business.name}
-                    h6(class="text-center") #{business.rating}
+                    h5(class="text-center") #{business.rating}
                         span(class="glyphicon glyphicon-star")
+                    h5(class="text-center") #{business.countGoing} Going!
                     unless business.userGoing
                         form(id="attendance" method="POST")
                             input(class="hidden" name="businessId" value=business.id)

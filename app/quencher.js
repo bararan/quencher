@@ -3,6 +3,34 @@
 
 module.exports = function(app,db, passport, yelpClient) {
     app.get("/", function(req, res) {
+        if (req.user) {
+            let sessionBusinesses = req.session.results.map(function(bus) {
+                return bus.id;
+            })
+            db.collection("quencherBusinesses").find(
+                {
+                    id: {$in: sessionBusinesses}
+                },
+                {
+                    _id: 0,
+                    id: 1,
+                    going: 1
+                }
+            ).toArray(function(err, businesses) {
+                if (err) return console.error(err);
+                businesses.forEach(function(business) {
+                    let sessionBusiness = req.session.results.find(function(bus) {
+                        return bus.id == business.id;
+                    })
+                    sessionBusiness.userGoing = business.going.indexOf(req.user.user_id) > -1;
+                    sessionBusiness.countGoing = business.going.length;
+                })
+                const city = req.session.city;
+                const results = req.session.results;
+                res.render("index", {city: city, results: results})
+            });
+            return;               
+        }
         const city = req.session.city || false;
         const results = req.session.results || false;
         res.render("index", {city: city, results: results});
@@ -12,7 +40,7 @@ module.exports = function(app,db, passport, yelpClient) {
 
     app.get("/auth/twitter/callback",
         passport.authenticate("twitter", { successRedirect: "/addme",
-                                            failureRedirect: "/" }));
+                                           failureRedirect: "/" }));
 
     app.post("/search", function(req, res) {
         const searchRequest = {
@@ -24,31 +52,20 @@ module.exports = function(app,db, passport, yelpClient) {
             .then(function(response) {
                 req.session.city = req.body.city;
                 req.session.results = response.jsonBody.businesses.map(function(bus) {
-                    let userGoing = false;
-                    if (req.user) {
-                        db.collection("quencherBusinesses").findOne(
-                            {id: bus.id},
-                            {_id: 0, going: 1},
-                            function(err, business) {
-                                if (err) return console.error(err);
-                                if (business) {
-                                    userGoing = business.value.going.indexOf(req.user.user_id) > -1;
-                                }
-                            });
-                    }
                     return {
                         name: bus.name,
                         url: bus.url,
                         image_url: bus.image_url,
                         id: bus.id,
                         rating: bus.rating,
-                        userGoing: userGoing
+                        userGoing: false,
+                        countGoing: 0
                     }
                 })
                 return res.redirect("/")
             })
             .catch(function(err) {
-                console.error(err);
+                console.error("YELP KAPUT!");
             });
     })
 
@@ -72,37 +89,37 @@ module.exports = function(app,db, passport, yelpClient) {
             },
             function(err, response) {
                 if (err) return console.error(err);
-                let business = req.session.results.find(function(bus) {
-                    return bus.id == req.session.businessId;
-                })
-                business.userGoing = false;
+                // let business = req.session.results.find(function(bus) {
+                //     return bus.id == req.session.businessId;
+                // })
+                // business.userGoing = false;
                 return res.redirect("/");
             }
         )
     })
 
     app.get("/addme", function(req, res) {
-        let sessionBusinesses = req.session.results.map(function(bus) {
-            return bus.id;
-        })
-        db.collection("quencherBusinesses").find(
-            {
-                id: {$in: sessionBusinesses}
-            },
-            {
-                _id: 0,
-                id: 1,
-                going: 1
-            }
-        ).toArray(function(err, businesses) {
-            if (err) return console.error(err);
-            businesses.forEach(function(business) {
-                let sessionBusiness = req.session.results.find(function(bus) {
-                    return bus.id == business.id;
-                })
-                sessionBusiness.userGoing = business.going.indexOf(req.user.user_id) > -1;
-            })
-        });
+        // let sessionBusinesses = req.session.results.map(function(bus) {
+        //     return bus.id;
+        // })
+        // db.collection("quencherBusinesses").find(
+        //     {
+        //         id: {$in: sessionBusinesses}
+        //     },
+        //     {
+        //         _id: 0,
+        //         id: 1,
+        //         going: 1
+        //     }
+        // ).toArray(function(err, businesses) {
+        //     if (err) return console.error(err);
+        //     businesses.forEach(function(business) {
+        //         let sessionBusiness = req.session.results.find(function(bus) {
+        //             return bus.id == business.id;
+        //         })
+        //         sessionBusiness.userGoing = business.going.indexOf(req.user.user_id) > -1;
+        //     })
+        // });
         db.collection("quencherBusinesses").findOneAndUpdate(
             {id: req.session.businessId},
             {
@@ -114,10 +131,10 @@ module.exports = function(app,db, passport, yelpClient) {
             },
             function(err, response) {
                 if (err) return console.error(err);
-                let business = req.session.results.find(function(bus) {
-                    return bus.id == req.session.businessId;
-                })
-                business.userGoing = true;
+                // let business = req.session.results.find(function(bus) {
+                //     return bus.id == req.session.businessId;
+                // })
+                // business.userGoing = true;
                 return res.redirect("/");
             }
         )

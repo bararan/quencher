@@ -10,12 +10,12 @@ const express = require("express")
     , yelp = require('yelp-fusion')
     , morgan = require("morgan")
     , session = require("express-session")
-    , MongoStore = require('connect-mongodb-session')(session)
-    // , assert = require("assert")
+    , MongoStore = require("connect-mongodb-session")(session)
     , bodyParser = require("body-parser")
     , quencher = require("./app/quencher"); 
 
 const url = "mongodb://" + process.env.DBUSR + ":" + process.env.DBPW + "@" + process.env.DB_URI;
+// const sessionUrl = "mongodb://" + process.env.DBUSR + ":" + process.env.DBPW + "@" + process.env.SESSION_DB_URI;
 const dbClient = mongo.MongoClient;
 
 dbClient.connect(url, function(err, db) {
@@ -26,33 +26,31 @@ dbClient.connect(url, function(err, db) {
         .then(function(response) {
             const yelpClient = yelp.client(response.jsonBody.access_token);
             let app = express();
-            app.use(express.static(path.join(__dirname, "static")));
-            app.set("port", (process.env.PORT || 5000));
-            app.set("view engine", "pug");
-            app.set("views", path.join(__dirname, "views"));
-            app.engine("pug", pug.__express);
-            app.use(morgan("dev"));
             app.use(bodyParser.urlencoded({extended: true}));
-
             var store = new MongoStore(
                 {
-                    uri: url, // 'mongodb://localhost:27017/connect_mongodb_session_test',
+                    url: url, //'mongodb://localhost:27017/connect_mongodb_session_test',
                     collection: "quencherSessions"
             });
+
             store.on("error", function(err) {
                 console.log("DB ERROR!: " + err)
-                // assert.ifError(err);
-                // assert.ok(false);
             });
 
             app.use(session({
                 secret: "myDirtyLittleSecret",
                 resave: true,
-                saveUninitialized: true
+                saveUninitialized: false
                 , store: store
             }));
             app.use(passport.initialize());
             app.use(passport.session());
+            app.use(morgan("dev"));
+            app.set("port", (process.env.PORT || 5000));
+            app.use(express.static(path.join(__dirname, "static")));
+            app.set("view engine", "pug");
+            app.set("views", path.join(__dirname, "views"));
+            app.engine("pug", pug.__express);
 
             passport.use(new TwitterStrategy(
                 {
@@ -88,7 +86,7 @@ dbClient.connect(url, function(err, db) {
                 db.collection("quencherUsers").findOne({user_id: user.user_id}, function (err, user) {
                     if (err) { return done(err); }
                     // console.log("DDD" + JSON.stringify(user))
-                    done(null, user);
+                    return done(null, user);
                 });
             });
 
