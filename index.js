@@ -28,7 +28,7 @@ dbClient.connect(url, function(err, db) {
             app.use(bodyParser.urlencoded({extended: true}));
             var store = new MongoStore(
                 {
-                    url: url, //'mongodb://localhost:27017/connect_mongodb_session_test',
+                    url: url,
                     collection: "quencherSessions"
             });
 
