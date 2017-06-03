@@ -10,7 +10,9 @@ const express = require("express")
     , yelp = require('yelp-fusion')
     , morgan = require("morgan")
     , session = require("express-session")
+    , flash = require("connect-flash")
     // , MongoStore = require("connect-mongodb-session")(session)
+    , MongoStore = require("connect-mongo")(session)
     , bodyParser = require("body-parser")
     , quencher = require("./app/quencher"); 
 
@@ -26,16 +28,19 @@ dbClient.connect(url, function(err, db) {
             const yelpClient = yelp.client(response.jsonBody.access_token);
             let app = express();
             app.use(bodyParser.urlencoded({extended: true}));
+            app.use(flash());
             app.use(session({
-                secret: "myDirtyLittleSecret",
-                resave: true,
-                saveUninitialized: false
-                // , store: new MongoStore(
-                //     {
-                //         uri: url,
-                //         collection: "quencherSessions"
-                //     }
-                // )
+                secret: "myDirtyLittleSecret"
+                , resave: true
+                , saveUninitialized: true
+                , store: new MongoStore(
+                    {
+                        db: db
+                        , collection: "quencherSessions"
+                        // uri: url,
+                        // collection: "quencherSessions"
+                    }
+                )
             }));
             app.use(passport.initialize());
             app.use(passport.session());
@@ -72,14 +77,12 @@ dbClient.connect(url, function(err, db) {
             ));
                 
             passport.serializeUser(function(user, done) {
-                // console.log("SSS" + JSON.stringify(user))
                 done(null, user);
             })
 
             passport.deserializeUser(function(user, done) {
                 db.collection("quencherUsers").findOne({user_id: user.user_id}, function (err, user) {
                     if (err) { return done(err); }
-                    // console.log("DDD" + JSON.stringify(user))
                     return done(null, user);
                 });
             });

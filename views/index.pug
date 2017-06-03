@@ -16,9 +16,11 @@ block content
                         span(class="glyphicon glyphicon-star")
                     h5(class="text-center") #{business.countGoing} Going!
                     unless business.userGoing
-                        form(id="attendance" method="POST")
-                            input(class="hidden" name="businessId" value=business.id)
-                            button(type="submit" class="btn submit add-remove" formaction= "/addme") I'm Going!
+                        //- form(id="attendance" method="POST")
+                        //-     input(class="hidden" name="businessId" value=business.id)
+                        //-     button(type="submit" class="btn submit add-remove" formaction= "/addme") I'm Going!
+                        -var link = "/addme/" + business.id
+                        a(class="btn add-remove" href=link) I'm Going
                     else
                         form(id="attendance" method="POST")
                             input(class="hidden" name="businessId" value=business.id)
