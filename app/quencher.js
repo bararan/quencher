@@ -1,8 +1,22 @@
 //@ts-check
 "use strict";
 
+
+
 module.exports = function(app,db, passport, yelpClient) {
-    let businessId = "";
+
+    const isLoggedIn = function(req, res, next) {
+        if (req.isAuthenticated()) {
+            return next();
+        }
+        // console.log(req.body)
+        // if (req.body.businessId) {
+        //     req.session.businessId = req.body.businessId;
+        //     console.log("BUSINESS ID " + req.session.businessId + " added to session")
+        // }
+        res.redirect("/auth/twitter");
+    }
+
     app.get("/", function(req, res) {
         if (req.user) {
             let sessionBusinesses = req.session.results.map(function(bus) {
@@ -30,7 +44,7 @@ module.exports = function(app,db, passport, yelpClient) {
                 const results = req.session.results;
                 res.render("index", {city: city, results: results})
             });
-            return;               
+            return;             
         }
         const city = req.session.city || false;
         const results = req.session.results || false;
@@ -38,38 +52,47 @@ module.exports = function(app,db, passport, yelpClient) {
         res.render("index", {city: city, results: results});
     })
 
-    app.get("/auth/twitter", passport.authenticate("twitter"));
+    // app.get("/auth/twitter", passport.authenticate("twitter"));
 
-    app.get("/auth/twitter/callback",
-        passport.authenticate("twitter", { successRedirect: "/login",
-                                           failureRedirect: "/" }));
+    app.get("/auth/twitter", function(req, res, next) {
+        passport.authenticate("twitter")(req, res, next)
+    })
 
-    // app.get("/auth/twitter/callback", function(req, res, next) {
-    //     passport.authenticate("twitter", function(err, user, info) {
-    //         if (err) {
-    //             console.error(err);
-    //             return res.render("/");
-    //         }
-    //         if (!user) {
-    //             return res.render("/");
-    //         }
-    //         req.login(user, function(err) {
-    //             if (err) {
-    //                 console.error(err);
-    //                 res.render("/");
-    //             }
-    //             const redirLink = "/addme/" + req.session.businessId; //req.flash("businessId");
-    //             console.log("REDIRECTING: " + redirLink)
-    //             return res.redirect(redirLink);
-    //         })
-    //     })(req, res, next)
-    //     // const successLink = "/addme/" + req.session.businessId; //req.flash("businessId");
-    //     // console.log("REDIRECTING TO " + successLink)
-    //     // passport.authenticate("twitter", { successRedirect: successLink,
-    //     //                                    failureRedirect: "/" })(req, res, next);
-    // });
+    app.get("/auth/twitter/callback", function(req, res, next) {
+        passport.authenticate("twitter", function(err, user, info) {
+            if (err) {
+                console.error(err);
+                return res.redirect("/");
+            }
+            if (!user) {
+                return res.redirect("/auth/twitter");
+            }
+            req.login(user, function(err) {
+                if (err) {
+                    console.error(err);
+                    return res.recirect("/");
+                }
+                // const redirLink = "/addme/" + req.session.businessId;
+                // console.log("REDIRECTING: " + redirLink)
+                const redirLink = "/addme"
+                return res.redirect(redirLink);
+            })
+        })(req, res, next)
+        // console.log(req.flash("businessId"))
+        // const successLink = "/addme/" + req.session.businessId; //
+        // // const successLink = "/login";
+        // console.log("REDIRECTING TO " + successLink)
+        // passport.authenticate("twitter", { successRedirect: successLink,
+        //                                    failureRedirect: "/" })(req, res, next);
+    });
 
-    app.post("/search", function(req, res) {
+    // app.get("/auth/twitter/callback",
+    //     passport.authenticate("twitter", 
+    //         {successRedirect: "/login",
+    //          failureRedirect: "/"})
+    // );
+
+    app.post("/search", function(req, res, next) {
         const searchRequest = {
             term: 'bars',
             location: req.body.city,
@@ -89,24 +112,24 @@ module.exports = function(app,db, passport, yelpClient) {
                         countGoing: 0
                     }
                 })
-                return res.redirect("/")
+                console.log(req.session.results.length + " results retrieved!")
+                res.redirect("/")
             })
             .catch(function(err) {
                 console.error("YELP QUERY FAILED!");
             });
     })
 
-    // app.post("/addme", function(req, res) {
-    //     // req.session.businessId = req.body.businessId;
-    //     if (!req.user) {
-    //         return res.redirect("/auth/twitter");
-    //     }
-    //     // req.session.businessId = req.body.businessId;
-    //     return res.redirect("/addme");
-    // })
+    app.post("/addme", function(req, res) {
+        // if (!req.user) {
+        //     req.flash("businessId", req.body.businessId);
+        //     return res.redirect("/auth/twitter");
+        // }
+        req.session.businessId = req.body.businessId;
+        return res.redirect("/addme/"); // + req.body.businessId);
+    })
 
     app.post("/removeme", function(req, res) {
-        // req.session.businessId = req.body.businessId;
         db.collection("quencherBusinesses").findOneAndUpdate(
             {id: req.body.businessId},
             {
@@ -168,19 +191,16 @@ module.exports = function(app,db, passport, yelpClient) {
     //     )
     // })
 
-    app.get("/login", function(req, res) {
-        return res.redirect("/addme/" + req.session.businessId);
-    })
+    // app.get("/login", isLoggedIn, function(req, res) {
+    //     // const businessId = req.flash("businessId")
+    //     // req.flash("businessId", businessId)
+    //     console.log("LOGGED IN:")
+    //     console.log(req.flash("businessId"))
+    //     return res.redirect("/addme/" + req.session.businessId);
+    // })
 
-    app.get("/addme/:businessId", function(req, res) {
-        if (req.params.businessId != "undefined") {
-            req.session.businessId = req.params.businessId;
-            console.log("Business ID Updated: " + req.session.businessId)
-        }
-        if (!req.user) {
-            return res.redirect("/auth/twitter");
-        }
-        console.log(req.session.businessId)
+    app.get("/addme/", isLoggedIn, function(req, res) {
+        console.log(req.session.businessId);
         db.collection("quencherBusinesses").findOneAndUpdate(
             {id: req.session.businessId},
             {

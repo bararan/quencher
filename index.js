@@ -27,29 +27,27 @@ dbClient.connect(url, function(err, db) {
         .then(function(response) {
             const yelpClient = yelp.client(response.jsonBody.access_token);
             let app = express();
+            app.use(express.static(path.join(__dirname, "static")));
+            app.set("view engine", "pug");
+            app.set("views", path.join(__dirname, "views"));
+            app.engine("pug", pug.__express);
+            app.use(morgan("dev"));
+            app.set("port", (process.env.PORT || 5000));
             app.use(bodyParser.urlencoded({extended: true}));
             app.use(flash());
             app.use(session({
                 secret: "myDirtyLittleSecret"
                 , resave: true
-                , saveUninitialized: true
+                , saveUninitialized: false
                 , store: new MongoStore(
                     {
                         db: db
                         , collection: "quencherSessions"
-                        // uri: url,
-                        // collection: "quencherSessions"
                     }
                 )
             }));
             app.use(passport.initialize());
             app.use(passport.session());
-            app.use(morgan("dev"));
-            app.set("port", (process.env.PORT || 5000));
-            app.use(express.static(path.join(__dirname, "static")));
-            app.set("view engine", "pug");
-            app.set("views", path.join(__dirname, "views"));
-            app.engine("pug", pug.__express);
 
             passport.use(new TwitterStrategy(
                 {
@@ -71,19 +69,19 @@ dbClient.connect(url, function(err, db) {
                             return done(null, newUser);
                         });
                     }
-                    return done(null, user);
+                    done(null, user);
                     });
                 }
             ));
                 
             passport.serializeUser(function(user, done) {
-                done(null, user);
+                done(null, user)
             })
 
             passport.deserializeUser(function(user, done) {
                 db.collection("quencherUsers").findOne({user_id: user.user_id}, function (err, user) {
                     if (err) { return done(err); }
-                    return done(null, user);
+                    done(null, user);
                 });
             });
 
@@ -94,6 +92,6 @@ dbClient.connect(url, function(err, db) {
             quencher(app, db, passport, yelpClient);
         })
         .catch(function(err) {
-            console.log(err);
+            console.error(err);
         })
 })
