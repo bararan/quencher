@@ -10,8 +10,6 @@ const express = require("express")
     , yelp = require('yelp-fusion')
     , morgan = require("morgan")
     , session = require("express-session")
-    , flash = require("connect-flash")
-    // , MongoStore = require("connect-mongodb-session")(session)
     , MongoStore = require("connect-mongo")(session)
     , bodyParser = require("body-parser")
     , quencher = require("./app/quencher"); 
@@ -34,7 +32,6 @@ dbClient.connect(url, function(err, db) {
             app.use(morgan("dev"));
             app.set("port", (process.env.PORT || 5000));
             app.use(bodyParser.urlencoded({extended: true}));
-            app.use(flash());
             app.use(session({
                 secret: "myDirtyLittleSecret"
                 , resave: true
@@ -45,6 +42,7 @@ dbClient.connect(url, function(err, db) {
                         , collection: "quencherSessions"
                     }
                 )
+                , cookie: {maxAge: 24 * 60 * 60 * 1000}
             }));
             app.use(passport.initialize());
             app.use(passport.session());
