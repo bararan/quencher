@@ -74,7 +74,7 @@ module.exports = function(app,db, passport, yelpClient) {
                 }
                 // const redirLink = "/addme/" + req.session.businessId;
                 // console.log("REDIRECTING: " + redirLink)
-                const redirLink = "/addme"
+                const redirLink = "/loggedin"; // "/addme/postLogin"
                 return res.redirect(redirLink);
             })
         })(req, res, next)
@@ -121,12 +121,8 @@ module.exports = function(app,db, passport, yelpClient) {
     })
 
     app.post("/addme", function(req, res) {
-        // if (!req.user) {
-        //     req.flash("businessId", req.body.businessId);
-        //     return res.redirect("/auth/twitter");
-        // }
         req.session.businessId = req.body.businessId;
-        return res.redirect("/addme/"); // + req.body.businessId);
+        return res.redirect("/addme/" + req.body.businessId);
     })
 
     app.post("/removeme", function(req, res) {
@@ -149,60 +145,17 @@ module.exports = function(app,db, passport, yelpClient) {
         )
     })
 
-    // app.get("/addme", function(req, res) {
-    //     // let sessionBusinesses = req.session.results.map(function(bus) {
-    //     //     return bus.id;
-    //     // })
-    //     // db.collection("quencherBusinesses").find(
-    //     //     {
-    //     //         id: {$in: sessionBusinesses}
-    //     //     },
-    //     //     {
-    //     //         _id: 0,
-    //     //         id: 1,
-    //     //         going: 1
-    //     //     }
-    //     // ).toArray(function(err, businesses) {
-    //     //     if (err) return console.error(err);
-    //     //     businesses.forEach(function(business) {
-    //     //         let sessionBusiness = req.session.results.find(function(bus) {
-    //     //             return bus.id == business.id;
-    //     //         })
-    //     //         sessionBusiness.userGoing = business.going.indexOf(req.user.user_id) > -1;
-    //     //     })
-    //     // });
-    //     db.collection("quencherBusinesses").findOneAndUpdate(
-    //         {id: req.session.businessId},
-    //         {
-    //             $addToSet: {going: req.user.user_id}
-    //         },
-    //         {
-    //             returnOriginal: false,
-    //             upsert: true
-    //         },
-    //         function(err, response) {
-    //             if (err) return console.error(err);
-    //             // let business = req.session.results.find(function(bus) {
-    //             //     return bus.id == req.session.businessId;
-    //             // })
-    //             // business.userGoing = true;
-    //             return res.redirect("/");
-    //         }
-    //     )
-    // })
+    app.get("/loggedin", isLoggedIn, function(req, res) {
+        console.log(req.flash("businessId"))
+        return res.redirect("/addme/" + req.session.businessId);
+    })
 
-    // app.get("/login", isLoggedIn, function(req, res) {
-    //     // const businessId = req.flash("businessId")
-    //     // req.flash("businessId", businessId)
-    //     console.log("LOGGED IN:")
-    //     console.log(req.flash("businessId"))
-    //     return res.redirect("/addme/" + req.session.businessId);
-    // })
-
-    app.get("/addme/", isLoggedIn, function(req, res) {
-        console.log(req.session.businessId);
+    app.get("/addme/:businessId", isLoggedIn, function(req, res) {
+        let businessId = req.params.businessId;
+        // if (businessId === "postLogin") businessId = req.session.businessId;
+        console.log("UPDATING " + businessId)
         db.collection("quencherBusinesses").findOneAndUpdate(
-            {id: req.session.businessId},
+            {id: businessId},
             {
                 $addToSet: {going: req.user.user_id}
             },
