@@ -89,7 +89,7 @@ input {
 
 #search-results {
     position: relative;
-    top: 60px;
+    top: 70px;
     display: flex;
     justify-content: center;
     flex-wrap: wrap;
